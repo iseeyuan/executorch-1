@@ -512,6 +512,9 @@ class Transformer(nn.Module):
                 input_pos,
             )
 
+        # Only the last logit is used for the new generated token
+        h = h[:, -1, :]
+
         h = self.norm(h)
 
         logits = self.output(h)
