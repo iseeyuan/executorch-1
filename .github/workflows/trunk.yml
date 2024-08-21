@@ -142,7 +142,6 @@ jobs:
         conda activate "${CONDA_ENV}"
 
         source .ci/scripts/utils.sh
-        install_flatc_from_source
         install_executorch
 
         install_arm
@@ -168,7 +167,6 @@ jobs:
         conda activate "${CONDA_ENV}"
 
         source .ci/scripts/utils.sh
-        install_flatc_from_source
         install_executorch
 
         install_arm

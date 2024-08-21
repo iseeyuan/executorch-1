@@ -33,61 +33,6 @@ install_pip_dependencies() {
   popd || return
 }
 
-install_domains() {
-  echo "Install torchvision and torchaudio"
-  pip install --no-use-pep517 --user "git+https://github.com/pytorch/audio.git@${TORCHAUDIO_VERSION}"
-  pip install --no-use-pep517 --user "git+https://github.com/pytorch/vision.git@${TORCHVISION_VERSION}"
-}
-
-install_pytorch_and_domains() {
-  pushd .ci/docker || return
-  TORCH_VERSION=$(cat ci_commit_pins/pytorch.txt)
-  popd || return
-
-  git clone https://github.com/pytorch/pytorch.git
-
-  # Fetch the target commit
-  pushd pytorch || return
-  git checkout "${TORCH_VERSION}"
-  git submodule update --init --recursive
-
-  export _GLIBCXX_USE_CXX11_ABI=0
-  # Then build and install PyTorch
-  python setup.py bdist_wheel
-  pip install "$(echo dist/*.whl)"
-
-  # Grab the pinned audio and vision commits from PyTorch
-  TORCHAUDIO_VERSION=$(cat .github/ci_commit_pins/audio.txt)
-  export TORCHAUDIO_VERSION
-  TORCHVISION_VERSION=$(cat .github/ci_commit_pins/vision.txt)
-  export TORCHVISION_VERSION
-
-  install_domains
-
-  popd || return
-  # Print sccache stats for debugging
-  sccache --show-stats || true
-}
-
-install_flatc_from_source() {
-  # NB: This function could be used to install flatbuffer from source
-  pushd third-party/flatbuffers || return
-
-  cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
-  if [ "$(uname)" == "Darwin" ]; then
-    CMAKE_JOBS=$(( $(sysctl -n hw.ncpu) - 1 ))
-  else
-    CMAKE_JOBS=$(( $(nproc) - 1 ))
-  fi
-  cmake --build . -j "${CMAKE_JOBS}"
-
-  # Copy the flatc binary to conda path
-  EXEC_PATH=$(dirname "$(which python)")
-  cp flatc "${EXEC_PATH}"
-
-  popd || return
-}
-
 install_arm() {
   # NB: This function could be used to install Arm dependencies
   # Setup arm example environment (including TOSA tools)
